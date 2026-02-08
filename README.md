@@ -39,18 +39,26 @@ flowchart TD
 ### 1. 状态管理
 ```python
 # 输入状态
-class AgentInputState:
-    image_path: str          # 图像文件路径
-    mark_down_path: str      # 相关Markdown文档路径
+class AgentInputState(TypedDict):
+    """InputState is only 'messages'."""
+    image_path:str    #图片路径
+    image_name:str    #图片名称
+    mark_down_path:str #图片源markdown路径
+    image_context:str    #图片的上下文
+    Number_of_check: int  #图片信息完整性检查次数
+    final_image_disc:str  #最终图片描述
+    p_error:str  #出错收集
 
 # 完整工作流状态
-class AgentState(AgentInputState):
-    Number_of_check: int     # 检查次数计数器
-    image_context: List      # 收集的图像上下文
-    messages: List           # 消息历史
-    final_image_disc: Any    # 最终描述结果
-    e_error: Optional[str]   # 错误信息
-```
+class AgentState(TypedDict):
+    """InputState is only 'messages'."""
+    image_path:str    #图片路径
+    image_name:str    #图片名称
+    mark_down_path:str #图片源markdown路径
+    image_context:str    #图片的上下文
+    Number_of_check: int  #图片信息完整性检查次数
+    final_image_disc:str  #最终图片描述
+    p_error:str  #出错收集
 
 ### 2. 处理节点
 
@@ -78,12 +86,10 @@ class AgentState(AgentInputState):
 
 ```
 .
-├── main.py                    # 主工作流定义
+├── disc_pdf_image.py          # 主工作流定义
 ├── state.py                   # 状态类型定义
 ├── prompt.py                  # 所有提示词模板
 ├── config.py                  # API密钥配置
-├── context_tool.py            # 上下文提取工具
-├── requirements.txt           # 依赖包列表
 └── README.md                  # 本说明文档
 ```
 
@@ -103,15 +109,16 @@ v_model_api_key = "your-zhipuai-api-key"
 
 ### 运行示例
 ```python
-from main import deep_image_disc
-
 input_state = {
-    "image_path": "path/to/your/image.jpg",
-    "mark_down_path": "path/to/your/document.md"
-}
-
-result = deep_image_disc.invoke(input_state)
-print(result["final_image_disc"])
+            "image_path": "demo7\hybrid_auto\images\\0fe37b6a0bde3ad5ea0f89422e80523bf8d269cd6ec90701ac0dda61fffa7bc9.jpg", 
+            "image_name": "0fe37b6a0bde3ad5ea0f89422e80523bf8d269cd6ec90701ac0dda61fffa7bc9.jpg",
+            "mark_down_path": 'demo7\hybrid_auto\demo7.md',  # 包含图像上下文的Markdown文件
+            "image_context":" ",
+            "Number_of_check": 5,
+            "final_image_disc":" ",
+            "p_error":" "
+        }
+r = deep_image_disc.invoke(input_state)
 ```
 
 ## 🧩 工作流详解
@@ -170,12 +177,15 @@ thinking = {"type": "enabled"}  # 启用思考过程
 
 ```json
 {
-  "final_image_disc": "详细的图像描述文本...",
-  "Number_of_check": 3,
-  "image_context": ["上下文片段1", "上下文片段2"],
-  "image_path": "原始图像路径",
-  "mark_down_path": "原始文档路径"
+    "image_path": "demo7\hybrid_auto\images\\0fe37b6a0bde3ad5ea0f89422e80523bf8d269cd6ec90701ac0dda61fffa7bc9.jpg", 
+    "image_name": "0fe37b6a0bde3ad5ea0f89422e80523bf8d269cd6ec90701ac0dda61fffa7bc9.jpg",
+    "mark_down_path": 'demo7\hybrid_auto\demo7.md',  # 包含图像上下文的Markdown文件
+    "image_context":"图像上下文信息",
+    "Number_of_check": 5,
+    "final_image_disc":"图像最终描述",
+    "p_error":" "
 }
+
 ```
 
 ## 🎨 提示词设计
@@ -242,14 +252,7 @@ else:
 - [智谱AI](https://open.bigmodel.cn/) - 提供GLM-4.6V模型
 - [DeepSeek](https://www.deepseek.com/) - 提供文本生成模型
 
----
 
-## 📞 联系方式
-
-如有问题或建议，请通过以下方式联系：
-
-- GitHub Issues: [项目问题跟踪](https://github.com/your-repo/issues)
-- Email: your-email@example.com
 
 ---
 
