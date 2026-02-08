@@ -217,6 +217,16 @@ else:
     return Command(goto="node_b")
 ```
 
+##效果
+描述前![394855170cf5253268e942c2c43313a836ab5819bdfd9991ac20edf5e6cae2f0](https://github.com/user-attachments/assets/2697d403-1459-4b9a-99ad-0dac778f0661)
+
+未添加上下文描述效果：
+\nThe image is a **donut (ring) chart** with a black background, illustrating the distribution of responses across two categories (plus a third unlabeled segment). Here’s a breakdown:  \n\n- **Segments & Percentages**:  \n  - A purple segment labeled “Agree” (lighter purple) accounts for **48%**.  \n  - A darker purple segment labeled “Strongly agree” accounts for **28%**.  \n  - A light gray (or white) segment (not labeled in the legend) represents the remaining **24%** (calculated as \\( 100 - 48 - 28 = 24 \\)).  \n\n- **Legend & Design**:  \n  - The legend on the right identifies the lighter purple as “Agree” and the darker purple as “Strongly agree.”  \n  - Text (percentages and labels) is white, contrasting with the black background for clarity.  \n\n\nThe chart visually compares the proportion of respondents who “Agree” versus “Strongly agree,” with the light gray segment representing the remaining response category (e.g., “Neutral,” “Disagree,” etc.).  \nA donut chart with 48% Agree, 28% Strongly agree, and 24% other.
+
+添加上下文描述效果：
+The image displays a donut chart illustrating executives' agreement levels on the statement that conversational interactions using generative AI will become a way to gather relevant customer context. The chart shows two colored segments: a lighter purple segment representing 48% of respondents who "Agree" and a darker purple segment representing 28% who "Strongly agree," with a white/gray segment representing the remaining percentage of respondents. The legend on the right side of the chart clearly identifies the color coding for each response category. This data visualization is part of the Accenture Technology Vision 2025 Executive Survey, which collected responses from 4,021 executives, providing a substantial sample size for the findings presented. The chart effectively communicates that a significant majority (76%) of executives believe conversational AI will be valuable for gathering customer context, highlighting strong industry confidence in this emerging technology application.
+
+
 ## 📈 性能优化
 
 1. **缓存机制**: 可添加结果缓存避免重复处理
