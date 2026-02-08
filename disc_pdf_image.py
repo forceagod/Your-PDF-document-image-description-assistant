@@ -33,6 +33,8 @@ from config import chat_model_api_key,v_model_api_key
 from langchain_openai import ChatOpenAI
 from langchain_community.chat_models import ChatZhipuAI
 from langchain_core.messages import HumanMessage
+import time
+import os
 
 chat_model = ChatOpenAI(
     model = "deepseek-chat",
@@ -44,7 +46,7 @@ chat_model = ChatOpenAI(
 v_model = ChatZhipuAI(
     model="glm-4.6v",
     temperature=0.3,
-    api_key= v_model_api_key,
+    api_key="8f7affaca409488c918b013459f7952c.8AjXQWudy32y6VK6",
     thinking={
             "type":"enabled"
         }
@@ -69,6 +71,7 @@ def judge_image(state: AgentState) -> Command[Literal["image_info_completeness_c
             },
         ],
     )
+    time.sleep(3) 
     response = v_model.invoke([judge_message])
 
     pattern = r"Judgment Result:\s*([^\n]+)"
@@ -84,8 +87,8 @@ def judge_image(state: AgentState) -> Command[Literal["image_info_completeness_c
         )
     else:
         # Proceed to research with verification message
+        print("图像有意义，准备进行信息完整性检查")
         return Command(
-            print("图像有意义，准备进行信息完整性检查")
             goto="image_info_completeness_check", 
             #update={"messages": [AIMessage(content=result)]}
         )
@@ -95,6 +98,7 @@ def image_info_completeness_check(state: AgentState) -> Command[Literal["disc_im
 
     # Step 1: Set up the research model for structured output
     print("正在进行信息完整性检查")
+    print("context: "+ state["image_context"])
     image_path = state["image_path"]
     with open(image_path, "rb") as image_file:
         # 编码为base64
@@ -108,6 +112,7 @@ def image_info_completeness_check(state: AgentState) -> Command[Literal["disc_im
             },
         ],
     )
+    time.sleep(3) 
     response = v_model.invoke([check_message])
 
     pattern = r"Information Missing Judgment:\s*([^\n]+)"
@@ -122,7 +127,7 @@ def image_info_completeness_check(state: AgentState) -> Command[Literal["disc_im
         )
     else:
         # Proceed to research with verification message
-        print(f"信息不完整，准备收集上下文，这是第{state.get("Number_of_check",0)}次收集")
+        print("信息不完整，准备收集上下文")
         return Command(
             goto="get_image_context", 
             update={"Number_of_check": state.get("Number_of_check",0) + 1}
@@ -170,20 +175,17 @@ def get_image_context(state: AgentState) -> Command[Literal["image_info_complete
             
                 break
     
-            return result
-    print("准备收集上下文")
+        return result
     try:
+        print("准备收集上下文...")
         # 读取Markdown文件
-        with open(state["markdown_path"], 'r', encoding='utf-8') as file:
+        with open(state["mark_down_path"], 'r', encoding='utf-8') as file:
             markdown_content = file.read()
-        
         # 查找图像路径和上下文
-        result = find_image_context_with_range(markdown_content, state["image_path"],min(state["check_numbers"],10))
-
+        result = find_image_context_with_range(markdown_content, state["image_name"],min(state["Number_of_check"],10))
         up_c = "The above text:" + ",".join(x["content"] for x in result["up_contexts"])
         down_c = "The following text:" + ",".join(x["content"] for x in result["down_contexts"])
         r = up_c + "  " + down_c
-
         image_path = state["image_path"]
         with open(image_path, "rb") as image_file:
         # 编码为base64
@@ -197,19 +199,22 @@ def get_image_context(state: AgentState) -> Command[Literal["image_info_complete
             },
         ],
         )
+        time.sleep(3) 
         response = v_model.invoke([context_summary_message])
         print("上下文收集完毕，再次进行检查")
         return Command(
             goto="image_info_completeness_check", 
-            update={"image_context": [AIMessage(content=response.content)]}
+            update={"image_context": response.content}
         )
         
     except FileNotFoundError:
+        print("收集失败1")
         Command(
             goto=END, 
             update={"e_error": "nothing"}
         )
     except Exception as e:
+        print(e)
         Command(
             goto=END, 
             update={"e_error": "nothing"}
@@ -224,18 +229,19 @@ def disc_image(state: AgentState) -> Command[Literal["__end__"]]:
         target_image = base64.b64encode(image_file.read()).decode('utf-8')
     image_disc_message = HumanMessage(
         content=[
-            {"type": "text", "text": IMAGE_JUDGE_PROMPT + "  " + "Supplementary information: " + state["image_context"]},
+            {"type": "text", "text": IMAGE_DISC_PROMPT + "  " + "Supplementary information: " + state["image_context"]},
             {
                 "type": "image_url",
                 "image_url": {"url": target_image},
             },
         ],
     )
+    time.sleep(3) 
     response = v_model.invoke([image_disc_message])
-
+    print("描述完成")
     return Command(
             goto=END, 
-            update={"final_image_disc": [AIMessage(content=response.content)]}
+            update={"final_image_disc": response.content}
     )  
 
 
@@ -243,7 +249,6 @@ deep_image_disc_builder = StateGraph(
     AgentState, 
     input=AgentInputState, 
 )
-
 
 # Add main workflow nodes for the complete research process
 deep_image_disc_builder.add_node("judge_image", judge_image)           # User clarification phase
@@ -257,7 +262,7 @@ deep_image_disc_builder.add_edge("disc_image", END)                   # Final ex
 
 # Compile the complete deep researcher workflow
 deep_image_disc = deep_image_disc_builder.compile()
-
+    
 def main():
     with open('demo7\hybrid_auto\demo7.md', 'r', encoding='utf-8') as f:
         content = f.read()
@@ -307,4 +312,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
